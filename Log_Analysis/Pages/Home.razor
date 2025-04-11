@@ -1,7 +1,7 @@
 ﻿@page "/"
 @using System.Text.RegularExpressions
 
-<h1 class="text-xl font-bold mb-4">HandOver AGV 거리 비교기</h1>
+<h1 class="text-xl font-bold mb-4">HandOver Log 거리 비교기</h1>
 
 <InputTextArea @bind-Value="logInput" class="w-full h-64 p-2 border rounded mb-4" placeholder="여기에 로그 데이터를 붙여넣기 하세요" />
 <button class="mb-4" @onclick="ParseLogs">분석하기</button>
@@ -15,6 +15,7 @@
                 <th class="p-2">Old AGV</th>
                 <th class="p-2">New AGV</th>
                 <th class="p-2">Closer</th>
+                <th class="p-2">Same</th>
                 <th class="p-2">Old Dist</th>
                 <th class="p-2">New Dist</th>
             </tr>
@@ -22,11 +23,13 @@
         <tbody>
             @foreach (var r in results)
             {
+                var isSame = (r.NewAgv == r.CloserAgv) ? "O" : "X";
                 <tr>
                     <td class="border p-2">@r.TaskId</td>
                     <td class="border p-2">@r.OldAgv</td>
                     <td class="border p-2">@r.NewAgv</td>
                     <td class="border p-2 font-bold">@r.CloserAgv</td>
+                    <td class="border p-2">@isSame</td>
                     <td class="border p-2">@r.OldDistance</td>
                     <td class="border p-2">@r.NewDistance</td>
                 </tr>
