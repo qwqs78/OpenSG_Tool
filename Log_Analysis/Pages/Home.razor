@@ -11,13 +11,12 @@
     <table class="result-table">
         <thead>
             <tr class="bg-gray-200">
+                <th class="p-2">Time</th>
                 <th class="p-2">Task ID</th>
                 <th class="p-2">Old AGV</th>
                 <th class="p-2">New AGV</th>
                 <th class="p-2">Closer</th>
                 <th class="p-2">Same</th>
-                <th class="p-2">Old Dist</th>
-                <th class="p-2">New Dist</th>
             </tr>
         </thead>
         <tbody>
@@ -25,13 +24,12 @@
             {
                 var isSame = (r.NewAgv == r.CloserAgv) ? "O" : "X";
                 <tr>
+                    <td class="border p-2">@r.time</td>
                     <td class="border p-2">@r.TaskId</td>
                     <td class="border p-2">@r.OldAgv</td>
                     <td class="border p-2">@r.NewAgv</td>
                     <td class="border p-2 font-bold">@r.CloserAgv</td>
                     <td class="border p-2">@isSame</td>
-                    <td class="border p-2">@r.OldDistance</td>
-                    <td class="border p-2">@r.NewDistance</td>
                 </tr>
             }
         </tbody>
@@ -39,20 +37,20 @@
 }
 <style>
     .result-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
     }
 
     .result-table th,
     .result-table td {
-        border: 1px solid #ccc;
-        padding: 8px;
-        text-align: center;
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
     }
 
     .result-table th {
-        background-color: #f0f0f0;
+    background-color: #f0f0f0;
     }
 </style>
 @code {
@@ -60,6 +58,7 @@
 
     private class AGVResult
     {
+        public string time { get; set; } = "";
         public string TaskId { get; set; } = "";
         public string OldAgv { get; set; } = "";
         public string NewAgv { get; set; } = "";
@@ -72,32 +71,43 @@
 
     private void ParseLogs()
     {
-        results.Clear();
-        var regex = new Regex(@"taskid:(.*?), old_agv:(\d+), new_agv:(\d+),.*?task_position:\((\d+),(\d+)\), old_agv_position:\((\d+),(\d+)\), new_agv_position:\((\d+),(\d+)\)");
-
-        foreach (Match match in regex.Matches(logInput))
+        try
         {
-            string taskId = match.Groups[1].Value;
-            string oldAgv = match.Groups[2].Value;
-            string newAgv = match.Groups[3].Value;
-            int tx = int.Parse(match.Groups[4].Value);
-            int ty = int.Parse(match.Groups[5].Value);
-            int ox = int.Parse(match.Groups[6].Value);
-            int oy = int.Parse(match.Groups[7].Value);
-            int nx = int.Parse(match.Groups[8].Value);
-            int ny = int.Parse(match.Groups[9].Value);
+            results.Clear();
+            //var regex = new Regex(@"taskid:(.*?), old_agv:(\d+), new_agv:(\d+),.*?task_position:\((\d+),(\d+)\), old_agv_position:\((\d+),(\d+)\), new_agv_position:\((\d+),(\d+)\)");
+            var regex = new Regex(@"\[(.*?)\]\s*-\s*taskid:(.*?), old_agv:(\d+), new_agv:(\d+),.*?task_position:\((\d+),(\d+)\), old_agv_position:\((\d+),(\d+)\), new_agv_position:\((\d+),(\d+)\)");
 
-            double oldDist = Math.Sqrt(Math.Pow(ox - tx, 2) + Math.Pow(oy - ty, 2));
-            double newDist = Math.Sqrt(Math.Pow(nx - tx, 2) + Math.Pow(ny - ty, 2));
 
-            results.Add(new AGVResult
+            foreach (Match match in regex.Matches(logInput))
             {
-                TaskId = taskId,
-                OldAgv = oldAgv,
-                NewAgv = newAgv,
-                OldDistance = Math.Round(oldDist, 2),
-                NewDistance = Math.Round(newDist, 2)
-            });
+                string timeString = match.Groups[1].Value;
+                string taskId = match.Groups[2].Value;
+                string oldAgv = match.Groups[3].Value;
+                string newAgv = match.Groups[4].Value;
+                int tx = int.Parse(match.Groups[5].Value);
+                int ty = int.Parse(match.Groups[6].Value);
+                int ox = int.Parse(match.Groups[7].Value);
+                int oy = int.Parse(match.Groups[8].Value);
+                int nx = int.Parse(match.Groups[9].Value);
+                int ny = int.Parse(match.Groups[10].Value);
+
+                double oldDist = Math.Sqrt(Math.Pow(ox - tx, 2) + Math.Pow(oy - ty, 2));
+                double newDist = Math.Sqrt(Math.Pow(nx - tx, 2) + Math.Pow(ny - ty, 2));
+
+                results.Add(new AGVResult
+                    {
+                        time = timeString,
+                        TaskId = taskId,
+                        OldAgv = oldAgv,
+                        NewAgv = newAgv,
+                        OldDistance = Math.Round(oldDist, 2),
+                        NewDistance = Math.Round(newDist, 2)
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing logs: {ex.Message}");
         }
     }
 }
