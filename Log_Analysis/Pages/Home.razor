@@ -17,8 +17,8 @@
                 <th class="p-2">New AGV</th>
                 <th class="p-2">Closer</th>
                 <th class="p-2">Same</th>
-				<th class="p-2">[Old] Task직선거리</th>
-                <th class="p-2">[New] Task직선거리</th>
+				<th class="p-2">[Old] Task직선거리(m)</th>
+                <th class="p-2">[New] Task직선거리(m)</th>
             </tr>
         </thead>
         <tbody>
@@ -32,8 +32,8 @@
                     <td class="border p-2">@r.NewAgv</td>
                     <td class="border p-2 font-bold">@r.CloserAgv</td>
                     <td class="border p-2">@isSame</td>
-					<td class="border p-2">@r.OldDistance</td>
-					<td class="border p-2">@r.NewDistance</td>
+					<td class="border p-2">@r.OldDistance.ToString("0.00")</td>
+                    <td class="border p-2">@r.NewDistance.ToString("0.00")</td>
                 </tr>
             }
         </tbody>
@@ -95,9 +95,12 @@
                 int nx = int.Parse(match.Groups[9].Value);
                 int ny = int.Parse(match.Groups[10].Value);
 
+				//tx, ty는 Task 위치
+                //ox, oy는 Old AGV 위치
+				//nx, ny는 New AGV 위치
 				// 유클리드 거리 계산
-                double oldDist = Math.Sqrt(Math.Pow(ox - tx, 2) + Math.Pow(oy - ty, 2));
-                double newDist = Math.Sqrt(Math.Pow(nx - tx, 2) + Math.Pow(ny - ty, 2));
+                double oldDist = Math.Sqrt(Math.Pow(ox - tx, 2) + Math.Pow(oy - ty, 2)) / 100; // m로 표시
+                double newDist = Math.Sqrt(Math.Pow(nx - tx, 2) + Math.Pow(ny - ty, 2)) / 100;
 
                 results.Add(new AGVResult
                     {
