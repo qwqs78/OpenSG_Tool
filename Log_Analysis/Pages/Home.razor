@@ -132,7 +132,7 @@
     private void OpenLogCountPage()
     {
         // 새 창에서 Logcount.razor 페이지(/logcount) 열기
-        var url = Navigation.ToAbsoluteUri("/logcount").ToString();
+        var url = Navigation.ToAbsoluteUri("/OpenSG_Tool/logcount").ToString();
         JS.InvokeVoidAsync("open", url, "_blank");
     }
     [Inject] NavigationManager Navigation { get; set; }
