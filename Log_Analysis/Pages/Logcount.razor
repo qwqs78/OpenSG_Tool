@@ -1,0 +1,79 @@
+﻿@page "/logcount"
+@using System.Text.RegularExpressions
+
+<h2 class="text-xl font-bold mb-4">시간당 핸드오버 발생 수</h2>
+
+<InputTextArea @bind-Value="logInput" class="w-full h-64 p-2 border rounded mb-4" placeholder="로그 데이터를 붙여넣으세요" />
+<button class="mb-4 bg-blue-500 text-white px-4 py-2 rounded" @onclick="AnalyzeLogs">분석하기</button>
+
+@if (hourlyCounts?.Count > 0)
+{
+    <table class="log-table">
+        <thead>
+            <tr>
+                <th>시간</th>
+                <th>핸드오버 발생 수</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in hourlyCounts)
+            {
+                <tr>
+                    <td>@entry.Key</td>
+                    <td>@entry.Value</td>
+                </tr>
+            }
+           
+        </tbody>
+    </table>
+}
+<style>
+    .log-table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+        .log-table th,
+        .log-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .log-table th {
+            background-color: #f2f2f2;
+        }
+</style>
+@code {
+    private string logInput = "";//로그 입력 값 변수
+	private Dictionary<int, int> hourlyCounts = new();// 딕셔너리 초기화
+
+    private void AnalyzeLogs()
+    {
+		hourlyCounts.Clear();// 딕셔너리에 있는 기존 데이터를 지웁니다.
+		// 새 로그를 작성시 기존에 남아있는 로그에 영향을 막기위해서 지웁니다.
+        
+        //[25/04/16 13:45:07.681] 이 형식의 로그를 분석합니다.
+        var regex = new Regex(@"\[\d{2}/\d{2}/\d{2} (\d{2}):\d{2}:\d{2}");
+
+        // 초기화: 09시~18시
+        for (int h = 9; h <= 18; h++)
+        {
+            hourlyCounts[h] = 0;
+        }
+
+
+		// 로그에서 시간 정보를 추출하여 카운트합니다.
+		foreach (Match match in regex.Matches(logInput))// logInput에서 정규식과 일치하는 모든 부분을 찾습니다.
+        {
+			if (int.TryParse(match.Groups[1].Value, out int hour))//tryParse를 사용하여 문자열을 정수로 변환합니다.
+            {
+				if (hour >= 9 && hour <= 18)// 09~18시 사이의 시간만 카운트합니다.
+                {
+					hourlyCounts[hour]++;// 해당 시간의 카운트를 증가시킵니다.
+                }
+            }
+        }
+    }
+}

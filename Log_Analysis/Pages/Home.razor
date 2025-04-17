@@ -6,6 +6,10 @@
 <InputTextArea @bind-Value="logInput" class="w-full h-64 p-2 border rounded mb-4" placeholder="여기에 로그 데이터를 붙여넣기 하세요" />
 <button class="mb-4" @onclick="ParseLogs">분석하기</button>
 
+<button @onclick="OpenLogCountPage" class="bg-green-500 text-white px-4 py-2 rounded">
+    시간당 핸드오버 수 확인하러가기(새창)
+</button>
+
 @if (results.Count > 0)
 {
     <table class="result-table">
@@ -17,23 +21,25 @@
                 <th class="p-2">New AGV</th>
                 <th class="p-2">Closer</th>
                 <th class="p-2">Same</th>
-				<th class="p-2">[Old] Task직선거리(m)</th>
-                <th class="p-2">[New] Task직선거리(m)</th>
+				<th class="p-2">[Old] Task좌표거리(m)</th>
+                <th class="p-2">[New] Task좌표거리(m)</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var r in results)
             {
                 var isSame = (r.NewAgv == r.CloserAgv) ? "O" : "X";
-                <tr>
-                    <td class="border p-2">@r.time</td>
+                var rowClass = isSame == "X" ? "text-red-500" : ""; // "X"일 경우 빨간색 글씨
+                <tr class="@rowClass">
+                    <td class="border p-2 ">@r.time</td>
                     <td class="border p-2">@r.TaskId</td>
                     <td class="border p-2">@r.OldAgv</td>
                     <td class="border p-2">@r.NewAgv</td>
                     <td class="border p-2 font-bold">@r.CloserAgv</td>
-                    <td class="border p-2">@isSame</td>
-					<td class="border p-2">@r.OldDistance.ToString("0.00")</td>
-                    <td class="border p-2">@r.NewDistance.ToString("0.00")</td>
+                    <td class="border p-2 ">@isSame</td>
+					<td class="border p-2">@r.OldDistance.ToString("0")</td>
+                    <td class="border p-2">@r.NewDistance.ToString("0")</td>
+
                 </tr>
             }
         </tbody>
@@ -78,7 +84,6 @@
         try
         {
             results.Clear();
-            //var regex = new Regex(@"taskid:(.*?), old_agv:(\d+), new_agv:(\d+),.*?task_position:\((\d+),(\d+)\), old_agv_position:\((\d+),(\d+)\), new_agv_position:\((\d+),(\d+)\)");
             var regex = new Regex(@"\[(.*?)\]\s*-\s*taskid:(.*?), old_agv:(\d+), new_agv:(\d+),.*?task_position:\((\d+),(\d+)\), old_agv_position:\((\d+),(\d+)\), new_agv_position:\((\d+),(\d+)\)");
 
 
@@ -98,9 +103,15 @@
 				//tx, ty는 Task 위치
                 //ox, oy는 Old AGV 위치
 				//nx, ny는 New AGV 위치
-				// 유클리드 거리 계산
-                double oldDist = Math.Sqrt(Math.Pow(ox - tx, 2) + Math.Pow(oy - ty, 2)) / 100; // m로 표시
-                double newDist = Math.Sqrt(Math.Pow(nx - tx, 2) + Math.Pow(ny - ty, 2)) / 100;
+				// 유클리드 거리 계산 ->   직선 거리
+                // double oldDist = Math.Sqrt(Math.Pow(ox - tx, 2) + Math.Pow(oy - ty, 2)) / 100; 
+                // double newDist = Math.Sqrt(Math.Pow(nx - tx, 2) + Math.Pow(ny - ty, 2)) / 100;
+
+				// 맨해튼 거리 계산
+                //맨하탄 거리는 격자 기반의 거리로, 직선이 아닌 수평 및 수직 경로만 고려하는 방법입니다.
+                double oldDist = (Math.Abs(ox - tx) + Math.Abs(oy - ty)) / 100; // m로 표시
+                double newDist = (Math.Abs(nx - tx) + Math.Abs(ny - ty)) / 100;
+
 
                 results.Add(new AGVResult
                     {
@@ -118,4 +129,12 @@
             Console.WriteLine($"Error parsing logs: {ex.Message}");
         }
     }
+    private void OpenLogCountPage()
+    {
+        // 새 창에서 Logcount.razor 페이지(/logcount) 열기
+        var url = Navigation.ToAbsoluteUri("/logcount").ToString();
+        JS.InvokeVoidAsync("open", url, "_blank");
+    }
+    [Inject] NavigationManager Navigation { get; set; }
+    [Inject] IJSRuntime JS { get; set; }
 }
