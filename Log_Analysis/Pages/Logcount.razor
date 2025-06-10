@@ -23,7 +23,10 @@
                     <td>@entry.Value</td>
                 </tr>
             }
-           
+           <tr>
+               <td>평균</td>
+                <td>@avgCount</td>
+           </tr>
         </tbody>
     </table>
 }
@@ -46,6 +49,7 @@
         }
 </style>
 @code {
+    private int avgCount = 0;
     private string logInput = "";//로그 입력 값 변수
 	private Dictionary<int, int> hourlyCounts = new();// 딕셔너리 초기화
 
@@ -75,5 +79,8 @@
                 }
             }
         }
+        // 평균 계산
+        int totalCount = hourlyCounts.Values.Sum(); // 총 카운트
+        avgCount = hourlyCounts.Count > 0 ? totalCount / (int)hourlyCounts.Count : 0;
     }
 }
