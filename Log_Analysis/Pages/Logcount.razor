@@ -51,36 +51,27 @@
 @code {
     private int avgCount = 0;
     private string logInput = "";//로그 입력 값 변수
-	private Dictionary<int, int> hourlyCounts = new();// 딕셔너리 초기화
+    private Dictionary<int, int> hourlyCounts = new();// 딕셔너리 초기화
 
     private void AnalyzeLogs()
     {
-		hourlyCounts.Clear();// 딕셔너리에 있는 기존 데이터를 지웁니다.
-		// 새 로그를 작성시 기존에 남아있는 로그에 영향을 막기위해서 지웁니다.
-        
-        //[25/04/16 13:45:07.681] 이 형식의 로그를 분석합니다.
+        hourlyCounts.Clear();
         var regex = new Regex(@"\[\d{2}/\d{2}/\d{2} (\d{2}):\d{2}:\d{2}");
 
-        // 초기화: 09시~18시
         for (int h = 9; h <= 18; h++)
-        {
             hourlyCounts[h] = 0;
-        }
 
-
-		// 로그에서 시간 정보를 추출하여 카운트합니다.
-		foreach (Match match in regex.Matches(logInput))// logInput에서 정규식과 일치하는 모든 부분을 찾습니다.
+        foreach (Match match in regex.Matches(logInput))
         {
-			if (int.TryParse(match.Groups[1].Value, out int hour))//tryParse를 사용하여 문자열을 정수로 변환합니다.
+            if (int.TryParse(match.Groups[1].Value, out int hour))
             {
-				if (hour >= 9 && hour <= 18)// 09~18시 사이의 시간만 카운트합니다.
-                {
-					hourlyCounts[hour]++;// 해당 시간의 카운트를 증가시킵니다.
-                }
+                if (hour >= 9 && hour <= 18)
+                    hourlyCounts[hour]++;
             }
         }
-        // 평균 계산
-        int totalCount = hourlyCounts.Values.Sum(); // 총 카운트
-        avgCount = hourlyCounts.Count > 0 ? totalCount / (int)hourlyCounts.Count : 0;
+
+        int totalCount = hourlyCounts.Values.Sum();
+        int countWithLogs = hourlyCounts.Values.Count(v => v > 0); // 0이 아닌 시간대만
+        avgCount = countWithLogs > 0 ? totalCount / (int)countWithLogs : 0;
     }
 }
